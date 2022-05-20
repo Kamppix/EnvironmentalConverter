@@ -40,14 +40,15 @@ def get_videos(playlist: Playlist):
             print(".ogg already exists!")
             # Delete temporary files
             os.remove(temp_mp4)
-            os.remove(temp_ogg)
             continue
         
         # Convert to .ogg
         print("Converting to .ogg...")
-        stream = ffmpeg.input(temp_mp4)
-        stream = ffmpeg.output(stream, temp_ogg)
-        ffmpeg.run(stream, quiet=True, overwrite_output=True)
+        (
+            ffmpeg.input(temp_mp4)
+            .output(temp_ogg)
+            .run(quiet=True, overwrite_output=True, cmd=os.getcwd() + os.sep + "ffmpeg.exe")
+        )
 
         # Strip silence
         print("Stripping .ogg...")
@@ -88,10 +89,11 @@ def main():
     while True:
         try:
             title = get_videos(playlist)
+            break
         except ConnectionResetError as e:
             print(e)
-            time.sleep(60)
-        break
+            print("Trying again in 10 seconds...")
+            time.sleep(10)
 
     if choice == "custom" or choice == "c":
         print("Copying template files")
@@ -106,7 +108,7 @@ def main():
         shutil.copy(pack_source, pack_target)
         shutil.copy(sounds_source, sounds_target)
 
-    print("SUCCESS!")
+    print("\n-- CONVERSION SUCCESSFUL --")
     return
 
 
