@@ -1,0 +1,262 @@
+{
+  "music.menu": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_ost_journeys_beginning",
+        "stream": true
+      }
+    ]
+  },
+  "music.overworld_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_day",
+        "stream": true
+      },
+      {
+        "name": "environmentalmusic:terraria_music_alternate_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.overworld_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.ocean_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_ocean",
+        "stream": true
+      }
+    ]
+  },
+  "music.ocean_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_journeys_end_ost_ocean_night_console_ocean",
+        "stream": true
+      }
+    ]
+  },
+  "music.jungle_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_jungle",
+        "stream": true
+      }
+    ]
+  },
+  "music.jungle_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_journeys_end_ost_surface_jungle_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.sky_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:journeys_end_ost_space_day_console_space",
+        "stream": true
+      },
+      {
+        "name": "environmentalmusic:terraria_music_space",
+        "stream": true
+      }
+    ]
+  },
+  "music.sky_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:sky_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.underground": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_underground",
+        "stream": true
+      },
+      {
+        "name": "environmentalmusic:terraria_music_alternate_underground",
+        "stream": true
+      }
+    ]
+  },
+  "music.desert": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_desert",
+        "stream": true
+      }
+    ]
+  },
+  "music.snow": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_ice",
+        "stream": true
+      }
+    ]
+  },
+  "music.mushroom_fields": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_mushrooms",
+        "stream": true
+      }
+    ]
+  },
+  "music.lush_caves": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_journeys_end_ost_underground_jungle",
+        "stream": true
+      }
+    ]
+  },
+  "music.deep_dark": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_journeys_end_ost_graveyard",
+        "stream": true
+      }
+    ]
+  },
+  "music.rain_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_rain",
+        "stream": true
+      }
+    ]
+  },
+  "music.rain_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_journeys_end_ost_morning_rain_console_tutorial",
+        "stream": true
+      }
+    ]
+  },
+  "music.thunder": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_journeys_end_ost_thunderstorm",
+        "stream": true
+      }
+    ]
+  },
+  "music.ocean_monument": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:thorium_ost_aqua",
+        "stream": true
+      }
+    ]
+  },
+  "music.village_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_journeys_end_ost_town_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.village_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:town_night_spoiler",
+        "stream": true
+      }
+    ]
+  },
+  "music.raid": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_goblin_army",
+        "stream": true
+      }
+    ]
+  },
+  "music.nether": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_underworld",
+        "stream": true
+      }
+    ]
+  },
+  "music.crimson_forest": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_crimson",
+        "stream": true
+      }
+    ]
+  },
+  "music.warped_forest": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_corruption",
+        "stream": true
+      }
+    ]
+  },
+  "music.soul_sand_valley": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:calamity_mod_ost_sirens_call",
+        "stream": true
+      }
+    ]
+  },
+  "music.wither": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_boss_3",
+        "stream": true
+      }
+    ]
+  },
+  "music.the_end": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_eerie",
+        "stream": true
+      }
+    ]
+  },
+  "music.end_city": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_lunar_towers",
+        "stream": true
+      }
+    ]
+  },
+  "music.ender_dragon": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_music_moon_lord",
+        "stream": true
+      }
+    ]
+  },
+  "music.credits": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:terraria_1.4.1_journeys_end_end_credits_theme_full_original_high_quality_soundtrack",
+        "stream": true
+      }
+    ]
+  }
+}

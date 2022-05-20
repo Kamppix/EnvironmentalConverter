@@ -1,0 +1,250 @@
+{
+  "music.menu": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:menu",
+        "stream": true
+      }
+    ]
+  },
+  "music.overworld_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:overworld_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.overworld_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:overworld_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.ocean_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:ocean_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.ocean_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:ocean_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.jungle_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:jungle_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.jungle_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:jungle_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.sky_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:sky_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.sky_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:sky_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.underground": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:underground",
+        "stream": true
+      }
+    ]
+  },
+  "music.desert": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:desert",
+        "stream": true
+      }
+    ]
+  },
+  "music.snow": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:snow",
+        "stream": true
+      }
+    ]
+  },
+  "music.mushroom_fields": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:mushroom_fields",
+        "stream": true
+      }
+    ]
+  },
+  "music.lush_caves": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:lush_caves",
+        "stream": true
+      }
+    ]
+  },
+  "music.deep_dark": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:deep_dark",
+        "stream": true
+      }
+    ]
+  },
+  "music.rain_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:rain_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.rain_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:rain_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.thunder": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:thunder",
+        "stream": true
+      }
+    ]
+  },
+  "music.ocean_monument": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:ocean_monument",
+        "stream": true
+      }
+    ]
+  },
+  "music.village_day": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:village_day",
+        "stream": true
+      }
+    ]
+  },
+  "music.village_night": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:village_night",
+        "stream": true
+      }
+    ]
+  },
+  "music.raid": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:raid",
+        "stream": true
+      }
+    ]
+  },
+  "music.nether": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:nether",
+        "stream": true
+      }
+    ]
+  },
+  "music.crimson_forest": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:crimson_forest",
+        "stream": true
+      }
+    ]
+  },
+  "music.warped_forest": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:warped_forest",
+        "stream": true
+      }
+    ]
+  },
+  "music.soul_sand_valley": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:soul_sand_valley",
+        "stream": true
+      }
+    ]
+  },
+  "music.wither": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:wither",
+        "stream": true
+      }
+    ]
+  },
+  "music.the_end": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:the_end",
+        "stream": true
+      }
+    ]
+  },
+  "music.end_city": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:end_city",
+        "stream": true
+      }
+    ]
+  },
+  "music.ender_dragon": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:ender_dragon",
+        "stream": true
+      }
+    ]
+  },
+  "music.credits": {
+    "sounds": [
+      {
+        "name": "environmentalmusic:credits",
+        "stream": true
+      }
+    ]
+  }
+}
