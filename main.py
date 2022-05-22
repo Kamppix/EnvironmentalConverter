@@ -1,4 +1,4 @@
-import os, datetime, re, shutil, json, youtube
+import os, datetime, re, shutil, json, ffmpeg, youtube
 from sys import platform
 from threading import Thread
 from window import Application, app_instance
@@ -70,11 +70,31 @@ class MusicPack:
             sounds_data = json.load(sounds_file)
             for _, event in sounds_data.items():
                 for sound in event['sounds']:
-                    filename = os.path.join(music_source, sound['name'][19:] + '.ogg')
-                    if os.path.exists(filename):
-                        shutil.copy(filename, sounds_folder)
+                    music_name = sound['name'][19:]
+                    filename = os.path.join(music_source, music_name)
+                    if os.path.exists(filename + '.mp3'):
+                        file_path = filename + '.mp3'
+                        Logger.log('Converting "' + music_name + '.mp3" to OGG...')
+                    elif os.path.exists(filename + '.wav'):
+                        file_path = filename + '.wav'
+                        Logger.log('Converting "' + music_name + '.wav" to OGG...')
+                    elif os.path.exists(filename + '.ogg'):
+                        file_path = filename + '.ogg'
+                        shutil.copy(file_path, sounds_folder)
+                        Logger.log('Copied "' + music_name + '.ogg"')
+                        continue
+                    else:
+                        continue
+                    
+                    # Convert to OGG
+                    (
+                        ffmpeg.input(file_path)
+                        .output(os.path.join(sounds_folder, music_name + '.ogg'))
+                        .run(quiet=True, overwrite_output=True, cmd=os.path.join(os.getcwd(), 'ffmpeg.exe'))
+                    )
+                    
 
-        Logger.log('\nConversion successful!')
+        Logger.log('Conversion successful!')
 
 
 def main():

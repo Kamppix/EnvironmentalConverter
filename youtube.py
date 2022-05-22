@@ -1,4 +1,5 @@
 import os, time, shutil, ffmpeg
+from urllib.error import URLError
 from pytube.contrib.playlist import Playlist
 from pydub.silence import detect_leading_silence
 from pydub import AudioSegment
@@ -14,7 +15,7 @@ def create_pack(url, target):
     try:
         title = playlist.title
     except KeyError:
-        Logger.log('Invalid playlist URL!')
+        Logger.log('Invalid playlist URL')
         return
 
     Logger.log('Creating music pack from URL...')
@@ -47,7 +48,7 @@ def create_pack(url, target):
         try:
             get_videos(playlist, target)
             break
-        except ConnectionResetError as e:
+        except (ConnectionResetError, URLError) as e:
             Logger.log('Connection to YouTube reset.\nTrying again in 5 seconds...')
             time.sleep(5)
 

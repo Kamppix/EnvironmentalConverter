@@ -1,6 +1,6 @@
-import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout
-from PyQt6.QtGui import QIcon, QTextOption
+import os, json
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout, QComboBox, QFrame
+from PyQt6.QtGui import QIcon, QTextOption, QTextCursor
 from PyQt6.QtCore import Qt
 from sys import platform
 
@@ -27,6 +27,45 @@ class TextField(QTextEdit):
         self.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAcceptRichText(False)
+        self.textChanged.connect(self.text_changed_event)
+    
+    def text_changed_event(self):
+        if self.objectName() == 'terraria_source_path':
+            music_packs = self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs')
+            pack_paths = None
+            try:
+                pack_paths = [f.path for f in os.scandir(self.toPlainText()) if f.is_dir()]
+            except FileNotFoundError:
+                pass
+            music_packs.set_packs(pack_paths)
+            
+
+class MusicPackSelector(QComboBox):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.folders = []
+    
+    def set_packs(self, paths):
+        self.folders.clear()
+        for _ in range(self.count()):
+            self.removeItem(0)
+        
+        if paths is not None:
+            items = []
+            for path in paths:
+                if os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.ogg')) or os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.mp3')) or os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.wav')):
+                    try:
+                        with open(os.path.join(path, 'pack.json')) as pack_file:
+                
+                            items.append(json.load(pack_file)['Name'])
+                            self.folders.append(os.path.basename(os.path.normpath(path)))
+                    except (FileNotFoundError, json.JSONDecodeError):
+                        pass
+            self.addItems(items)
+    
+    def current_folder(self):
+        if len(self.folders) > 0:
+            return self.folders[self.currentIndex()]
 
 
 class SelectFolderDialog(QFileDialog):
@@ -46,15 +85,12 @@ class BrowseButton(QPushButton):
         self.clicked.connect(self.clicked_event)
 
     def clicked_event(self):
-        Logger.log('Browse')
-
         if self.objectName() == 'files_browse_button':
             files_source_path = self.parent().findChild(TextField, 'files_source_path')
             files_source_path.setText(SelectFolderDialog(self.parent(), 'Select source folder', files_source_path.toPlainText()).path() or files_source_path.toPlainText())
             
         elif self.objectName() == 'terraria_browse_button':
             terraria_source_path = self.parent().findChild(TextField, 'terraria_source_path')
-            Logger.log(terraria_source_path.toPlainText())
             terraria_source_path.setText(SelectFolderDialog(self.parent(), 'Select Terraria resource pack folder', terraria_source_path.toPlainText()).path() or terraria_source_path.toPlainText())
 
         elif self.objectName() == 'target_browse_button':
@@ -73,52 +109,75 @@ class CreateButton(QPushButton):
         if index == 1:
             MusicPack.from_youtube(self.parent().parent().findChild(TextField, 'youtube_source_url').toPlainText(), self.parent().findChild(TextField, 'target_path').toPlainText())
         elif index == 2:
-            MusicPack.from_terraria(self.parent().parent().findChild(TextField, 'terraria_source_path').toPlainText(), self.parent().findChild(TextField, 'target_path').toPlainText())
+            selected_pack = self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').current_folder()
+            if selected_pack is not None:
+                MusicPack.from_terraria(os.path.join(self.parent().parent().findChild(TextField, 'terraria_source_path').toPlainText(), selected_pack), self.parent().findChild(TextField, 'target_path').toPlainText())
+
+
+class LogBox(QTextEdit):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setObjectName('log_box')
+        self.setFixedHeight(200)
+        self.setReadOnly(True)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setLineWrapMode(QTextEdit.LineWrapMode.FixedPixelWidth)
+        self.setWordWrapMode(QTextOption.WrapMode.WrapAnywhere)
+        self.setLineWrapColumnOrWidth(self.parent().parent().width() - 36)
+        self.setFrameShape(QFrame.Shape.Box)
+        self.textChanged.connect(self.auto_scroll)
+    
+    def auto_scroll(self):
+        self.moveCursor(QTextCursor.MoveOperation.End)
 
 
 class AppTab(QWidget):
     def __init__(self, parent: QMainWindow, index: int):
         super().__init__(parent)
 
-        DEFAULT_SOURCE = 'C:/Program Files x86/Steam/steamapps/workshop/content/105600'
-
         # Create source row
         v_box = QVBoxLayout(self)
 
         row = QWidget(self)
         v_box.addWidget(row)
-        h_box = QHBoxLayout(row)
+        h_box = QGridLayout(row)
         row.setLayout(h_box)
-        v_box.addStretch()
 
         if index == 0:
-            h_box.addWidget(Label('Source folder:', self))
+            h_box.addWidget(Label('Source folder:', self), 0, 0)
 
             source_path = TextField(os.getcwd(), self)
             source_path.setObjectName('files_source_path')
-            h_box.addWidget(source_path)
+            h_box.addWidget(source_path, 0, 1)
 
             browse_source_button = BrowseButton(self)
             browse_source_button.setObjectName('files_browse_button')
-            h_box.addWidget(browse_source_button)
+            h_box.addWidget(browse_source_button, 0, 2)
 
         elif index == 1:
-            h_box.addWidget(Label('Playlist URL:', self))
+            h_box.addWidget(Label('Playlist URL:', self), 0, 0)
 
             source_url = TextField('', self)
             source_url.setObjectName('youtube_source_url')
-            h_box.addWidget(source_url)
+            h_box.addWidget(source_url, 0, 1)
 
         elif index == 2:
-            h_box.addWidget(Label('Source folder:', self))
+            h_box.addWidget(Label('Source folder:', self), 0, 0)
 
             source_path = TextField(SYSTEM_PATHS[platform]['terraria'], self)
             source_path.setObjectName('terraria_source_path')
-            h_box.addWidget(source_path)
+            h_box.addWidget(source_path, 0, 1)
 
             browse_source_button = BrowseButton(self)
             browse_source_button.setObjectName('terraria_browse_button')
-            h_box.addWidget(browse_source_button)
+            h_box.addWidget(browse_source_button, 0, 2)
+            
+            h_box.addWidget(Label('Music pack:', self), 1, 0)
+            music_packs = MusicPackSelector(self)
+            music_packs.setObjectName('terraria_music_packs')
+            source_path.text_changed_event()
+            h_box.addWidget(music_packs, 1, 1)
 
 
 class Application(QApplication):
@@ -127,9 +186,9 @@ class Application(QApplication):
         self.setWindowIcon(QIcon('app_icon.ico'))
         # Initialize window
         self.window = QMainWindow()
-        self.window.setWindowTitle('Environmental Creator')
+        self.window.setWindowTitle('Pixel Music Packer')
         self.window.setWindowIcon(QIcon('app_icon.ico'))
-        self.window.setFixedSize(640, 500)
+        self.window.setFixedWidth(640)
 
         # Create layout
         column = QWidget(self.window)
@@ -166,16 +225,7 @@ class Application(QApplication):
         
         # Create Log box
         v_box.addWidget(Label('Log output:', row))
-        log_box = QTextEdit(column)
-        log_box.setObjectName('log_box')
-        log_box.setFixedHeight(200)
-        log_box.setReadOnly(True)
-        log_box.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        log_box.setLineWrapMode(QTextEdit.LineWrapMode.FixedPixelWidth)
-        log_box.setLineWrapColumnOrWidth(self.window.width() - 36)
-        log_box.setWordWrapMode(QTextOption.WrapMode.WrapAnywhere)
-        log_box.setStyleSheet('background-color: #f9f9f9; border: 1px solid #e5e5e5;')
-        v_box.addWidget(log_box)
+        v_box.addWidget(LogBox(column))
 
         # Add stretch
         v_box.addStretch()

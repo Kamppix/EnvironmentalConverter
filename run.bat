@@ -1,0 +1,2 @@
+.\PixelMusicPacker.exe
+pause
