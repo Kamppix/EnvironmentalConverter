@@ -2,7 +2,7 @@
   "music.menu": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_ost_journeys_beginning",
+        "name": "environmentalmusic:music_51",
         "stream": true
       }
     ]
@@ -10,11 +10,11 @@
   "music.overworld_day": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_day",
+        "name": "environmentalmusic:music_1",
         "stream": true
       },
       {
-        "name": "environmentalmusic:terraria_music_alternate_day",
+        "name": "environmentalmusic:music_18",
         "stream": true
       }
     ]
@@ -22,7 +22,7 @@
   "music.overworld_night": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_night",
+        "name": "environmentalmusic:music_3",
         "stream": true
       }
     ]
@@ -30,7 +30,7 @@
   "music.ocean_day": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_ocean",
+        "name": "environmentalmusic:music_22",
         "stream": true
       }
     ]
@@ -38,7 +38,7 @@
   "music.ocean_night": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_journeys_end_ost_ocean_night_console_ocean",
+        "name": "environmentalmusic:music_43",
         "stream": true
       }
     ]
@@ -46,7 +46,7 @@
   "music.jungle_day": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_jungle",
+        "name": "environmentalmusic:music_7",
         "stream": true
       }
     ]
@@ -54,7 +54,7 @@
   "music.jungle_night": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_journeys_end_ost_surface_jungle_night",
+        "name": "environmentalmusic:music_55",
         "stream": true
       }
     ]
@@ -62,11 +62,7 @@
   "music.sky_day": {
     "sounds": [
       {
-        "name": "environmentalmusic:journeys_end_ost_space_day_console_space",
-        "stream": true
-      },
-      {
-        "name": "environmentalmusic:terraria_music_space",
+        "name": "environmentalmusic:music_42",
         "stream": true
       }
     ]
@@ -74,7 +70,7 @@
   "music.sky_night": {
     "sounds": [
       {
-        "name": "environmentalmusic:sky_night",
+        "name": "environmentalmusic:music_15",
         "stream": true
       }
     ]
@@ -82,11 +78,11 @@
   "music.underground": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_underground",
+        "name": "environmentalmusic:music_4",
         "stream": true
       },
       {
-        "name": "environmentalmusic:terraria_music_alternate_underground",
+        "name": "environmentalmusic:music_31",
         "stream": true
       }
     ]
@@ -94,7 +90,7 @@
   "music.desert": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_desert",
+        "name": "environmentalmusic:music_21",
         "stream": true
       }
     ]
@@ -102,7 +98,7 @@
   "music.snow": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_ice",
+        "name": "environmentalmusic:music_14",
         "stream": true
       }
     ]
@@ -110,7 +106,7 @@
   "music.mushroom_fields": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_mushrooms",
+        "name": "environmentalmusic:music_29",
         "stream": true
       }
     ]
@@ -118,7 +114,7 @@
   "music.lush_caves": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_journeys_end_ost_underground_jungle",
+        "name": "environmentalmusic:music_54",
         "stream": true
       }
     ]
@@ -126,7 +122,7 @@
   "music.deep_dark": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_journeys_end_ost_graveyard",
+        "name": "environmentalmusic:music_30",
         "stream": true
       }
     ]
@@ -134,7 +130,7 @@
   "music.rain_day": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_rain",
+        "name": "environmentalmusic:music_59",
         "stream": true
       }
     ]
@@ -142,7 +138,7 @@
   "music.rain_night": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_journeys_end_ost_morning_rain_console_tutorial",
+        "name": "environmentalmusic:music_19",
         "stream": true
       }
     ]
@@ -150,7 +146,7 @@
   "music.thunder": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_journeys_end_ost_thunderstorm",
+        "name": "environmentalmusic:music_52",
         "stream": true
       }
     ]
@@ -158,7 +154,7 @@
   "music.ocean_monument": {
     "sounds": [
       {
-        "name": "environmentalmusic:thorium_ost_aqua",
+        "name": "environmentalmusic:music_37",
         "stream": true
       }
     ]
@@ -166,7 +162,7 @@
   "music.village_day": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_journeys_end_ost_town_day",
+        "name": "environmentalmusic:music_46",
         "stream": true
       }
     ]
@@ -174,7 +170,7 @@
   "music.village_night": {
     "sounds": [
       {
-        "name": "environmentalmusic:town_night_spoiler",
+        "name": "environmentalmusic:music_47",
         "stream": true
       }
     ]
@@ -182,7 +178,7 @@
   "music.raid": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_goblin_army",
+        "name": "environmentalmusic:music_39",
         "stream": true
       }
     ]
@@ -190,7 +186,7 @@
   "music.nether": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_underworld",
+        "name": "environmentalmusic:music_36",
         "stream": true
       }
     ]
@@ -198,7 +194,7 @@
   "music.crimson_forest": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_crimson",
+        "name": "environmentalmusic:music_16",
         "stream": true
       }
     ]
@@ -206,7 +202,7 @@
   "music.warped_forest": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_corruption",
+        "name": "environmentalmusic:music_8",
         "stream": true
       }
     ]
@@ -214,7 +210,7 @@
   "music.soul_sand_valley": {
     "sounds": [
       {
-        "name": "environmentalmusic:calamity_mod_ost_sirens_call",
+        "name": "environmentalmusic:music_53",
         "stream": true
       }
     ]
@@ -222,7 +218,7 @@
   "music.wither": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_boss_3",
+        "name": "environmentalmusic:music_13",
         "stream": true
       }
     ]
@@ -230,7 +226,7 @@
   "music.the_end": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_eerie",
+        "name": "environmentalmusic:music_2",
         "stream": true
       }
     ]
@@ -238,7 +234,7 @@
   "music.end_city": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_lunar_towers",
+        "name": "environmentalmusic:music_34",
         "stream": true
       }
     ]
@@ -246,7 +242,7 @@
   "music.ender_dragon": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_music_moon_lord",
+        "name": "environmentalmusic:music_38",
         "stream": true
       }
     ]
@@ -254,7 +250,7 @@
   "music.credits": {
     "sounds": [
       {
-        "name": "environmentalmusic:terraria_1.4.1_journeys_end_end_credits_theme_full_original_high_quality_soundtrack",
+        "name": "environmentalmusic:music_89",
         "stream": true
       }
     ]
