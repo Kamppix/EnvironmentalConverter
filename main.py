@@ -1,7 +1,7 @@
 import os, datetime, re, shutil, json, ffmpeg, youtube
 from sys import platform
 from threading import Thread
-from window import Application, app_instance
+import window
 
 
 class Logger:
@@ -11,7 +11,7 @@ class Logger:
         line = '[' + str(datetime.datetime.now().strftime("%H:%M:%S")) + ']: ' + line
         print(line)
         
-        app = Application.instance()
+        app = window.Application.instance()
         if app is not None:
             app.log(line)
 
@@ -37,34 +37,35 @@ class MusicPack:
         NewThread(target = youtube.create_pack, args = (url, target))
 
     def from_terraria(source, target):
+        shutil.rmtree(target)
+        Logger.log('Removed the existing directory and its contents')
         NewThread(target = MusicPack.create_from_terraria, args = (source, target))
     
     def create_from_terraria(source, target):
-        with open(os.path.join(source, 'pack.json')) as pack_file:
-            title = json.load(pack_file)['Name']
-
-        target_path = os.path.join(target, title)
-        sounds_folder = os.path.join(target_path, 'assets', 'environmentalmusic', 'sounds')
+        sounds_folder = os.path.join(target, 'assets', 'environmentalmusic', 'sounds')
         if not os.path.exists(sounds_folder):
             os.makedirs(sounds_folder)
 
         Logger.log('Copying template files...')
+        # Copy files from music pack template
         template_source = os.path.join(os.getcwd(), 'music_packs', 'template')
         pack_source = os.path.join(template_source, 'pack.mcmeta')
         sounds_source = os.path.join(template_source, 'assets', 'environmentalmusic', 'sounds_terraria.json')
 
-        pack_target = os.path.join(target_path, 'pack.mcmeta')
-        sounds_target = os.path.join(target_path, 'assets', 'environmentalmusic', 'sounds.json')
+        pack_target = os.path.join(target, 'pack.mcmeta')
+        sounds_target = os.path.join(target, 'assets', 'environmentalmusic', 'sounds.json')
 
         shutil.copy(pack_source, pack_target)
         shutil.copy(sounds_source, sounds_target)
         
         Logger.log('Copying music pack files...')
+        # Copy pack icon
         icon_source = os.path.join(source, 'icon.png')
-        icon_target = os.path.join(target_path, 'pack.png')
+        if os.path.exists(icon_source):
+            icon_target = os.path.join(target, 'pack.png')
+            shutil.copy(icon_source, icon_target)
 
-        shutil.copy(icon_source, icon_target)
-
+        # Copy music
         music_source = os.path.join(source, 'Content', 'Music')
         with open(sounds_target) as sounds_file:
             sounds_data = json.load(sounds_file)
@@ -93,8 +94,7 @@ class MusicPack:
                         .run(quiet=True, overwrite_output=True, cmd=os.path.join(os.getcwd(), 'ffmpeg.exe'))
                     )
                     
-
-        Logger.log('Conversion successful!')
+        Logger.log('Music pack conversion successful!')
 
 
 def main():
@@ -104,7 +104,7 @@ def main():
         Logger.log('Unsupported OS (' + platform + ') detected! Exiting program...')
         exit()
 
-    Application(Logger, MusicPack)
+    window.Application(Logger, MusicPack)
     Logger.log('Exiting program...')
 
 

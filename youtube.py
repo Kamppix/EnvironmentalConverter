@@ -52,7 +52,7 @@ def create_pack(url, target):
             Logger.log('Connection to YouTube reset.\nTrying again in 5 seconds...')
             time.sleep(5)
 
-    Logger.log('Conversion successful!')
+    Logger.log('Music pack creation successful!')
 
 
 def get_videos(playlist: Playlist, target):
