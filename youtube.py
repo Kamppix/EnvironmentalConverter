@@ -4,7 +4,6 @@ from pytube.contrib.playlist import Playlist
 from pydub.silence import detect_leading_silence
 from pydub import AudioSegment
 from main import Logger, MusicPack
-from time import sleep
 
 
 TERRARIA_URL = 'https://youtube.com/playlist?list=PLmEInNWnJt01A24SN36oWl4OufV4L6Oex'

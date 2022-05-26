@@ -1,8 +1,11 @@
+from dataclasses import replace
 import os, json
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout, QComboBox, QFrame, QLineEdit, QMessageBox, QScrollArea, QSizePolicy
 from PyQt6.QtGui import QIcon, QTextOption, QTextCursor
 from PyQt6.QtCore import Qt
 from sys import platform
+from pytube.contrib.playlist import Playlist
+from urllib.error import URLError
 
 
 SYSTEM_PATHS = {'win32': { 'minecraft': os.path.join(os.getenv('AppData'), '.minecraft', 'resourcepacks'), 'terraria': 'C:\Program Files (x86)\Steam\steamapps\workshop\content\\105600' },
@@ -28,19 +31,40 @@ class TextField(QLineEdit):
         self.textChanged.connect(self.text_changed_event)
     
     def text_changed_event(self):
-        if self.objectName() == 'terraria_source_path':
-            music_packs = self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs')
+        if self.objectName() == 'files_source_path':
+            file_paths = None
+            try:
+                file_paths = [f.path for f in os.scandir(self.text()) if f.is_file() and f.name.endswith('.ogg')]
+            except FileNotFoundError:
+                pass
+            
+            for selector in self.parent().parent().findChildren(FileSelector, 'files_selector'):
+                selector.set_files(file_paths)
+
+        if self.objectName() == 'youtube_source_url':
+            video_titles = None
+            try:
+                playlist = Playlist(self.text())
+                video_titles = [v.title for v in playlist.videos]
+            except (ConnectionResetError, URLError, KeyError):
+                pass
+            
+            for selector in self.parent().parent().findChildren(FileSelector, 'files_selector'):
+                selector.set_files(video_titles)
+            
+        elif self.objectName() == 'terraria_source_path':
             pack_paths = None
             try:
                 pack_paths = [f.path for f in os.scandir(self.text()) if f.is_dir()]
             except FileNotFoundError:
                 pass
-            music_packs.set_packs(pack_paths)
+            self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').set_packs(pack_paths)
             
 
 class MusicPackSelector(QComboBox):
     def __init__(self, parent):
         super().__init__(parent)
+        self.setObjectName('terraria_music_packs')
         self.addItem('--')
         self.folders = []
     
@@ -55,7 +79,6 @@ class MusicPackSelector(QComboBox):
                 if os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.ogg')) or os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.mp3')) or os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.wav')):
                     try:
                         with open(os.path.join(path, 'pack.json')) as pack_file:
-                
                             items.append(json.load(pack_file)['Name'])
                             self.folders.append(os.path.basename(os.path.normpath(path)))
                     except (FileNotFoundError, json.JSONDecodeError):
@@ -139,27 +162,17 @@ class LogBox(QTextEdit):
 class FileSelector(QComboBox):
     def __init__(self, parent):
         super().__init__(parent)
+        self.setObjectName('files_selector')
         self.setFixedWidth(300)
         self.addItem('--')
-        self.files = []
     
     def set_files(self, paths):
-        self.files.clear()
         for _ in range(self.count() - 1):
             self.removeItem(1)
         
         if paths is not None:
-            items = []
             for path in paths:
-                if os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.ogg')) or os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.mp3')) or os.path.exists(os.path.join(path, 'Content', 'Music', 'Music_1.wav')):
-                    try:
-                        with open(os.path.join(path, 'pack.json')) as pack_file:
-                
-                            items.append(json.load(pack_file)['Name'])
-                            self.files.append(os.path.basename(os.path.normpath(path)))
-                    except (FileNotFoundError, json.JSONDecodeError):
-                        pass
-            self.addItems(items)
+                self.addItem(os.path.basename(os.path.normpath(path)))
     
     def current_folder(self):
         if len(self.files) > 1 and self.currentIndex() > 0:
@@ -191,11 +204,11 @@ class FileAssigner(QScrollArea):
         v_box.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinAndMaxSize)
         child.setLayout(v_box)
 
-        v_box.addWidget(FileAssignRow('Overworld day', self))
-        v_box.addWidget(FileAssignRow('Overworld night', self))
-        v_box.addWidget(FileAssignRow('Underground', self))
-        v_box.addWidget(FileAssignRow('Ender dragon', self))
-        
+        with open(os.path.join(os.getcwd(), 'music_packs', 'template', 'assets', 'environmentalmusic', 'sounds.json')) as sounds_file:
+            sounds_data = json.load(sounds_file)
+            for event, _ in sounds_data.items():
+                v_box.addWidget(FileAssignRow(event[6:].replace('_', ' ').capitalize(), self))
+
 
 class AppTab(QWidget):
     def __init__(self, parent: QMainWindow, index: int):
@@ -229,6 +242,8 @@ class AppTab(QWidget):
             source_url.setObjectName('youtube_source_url')
             grid.addWidget(source_url, 0, 1)
 
+            v_box.addWidget(FileAssigner(self))
+
         elif index == 2:
             grid.addWidget(Label('Source folder:', self), 0, 0)
 
@@ -242,7 +257,6 @@ class AppTab(QWidget):
             
             grid.addWidget(Label('Music pack:', self), 1, 0)
             music_packs = MusicPackSelector(self)
-            music_packs.setObjectName('terraria_music_packs')
             source_path.text_changed_event()
             grid.addWidget(music_packs, 1, 1)
 
