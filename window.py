@@ -128,8 +128,13 @@ class CreateButton(QPushButton):
 
     def clicked_event(self):
         index = self.parent().parent().findChild(QTabWidget, 'tabs').currentIndex()
-        if index == 1:
+        if index == 0:
+            source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
+            MusicPack.from_files([os.path.join(source_folder, f.current_file()) for f in self.parent().parent().findChildren(FileSelector, 'files_selector') if f.current_file() is not None], self.parent().findChild(TextField, 'target_path').text())
+
+        elif index == 1:
             MusicPack.from_youtube(self.parent().parent().findChild(TextField, 'youtube_source_url').text(), self.parent().findChild(TextField, 'target_path').text())
+            
         elif index == 2:
             selected_pack = self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').current_folder()
             if selected_pack is not None:
@@ -174,9 +179,10 @@ class FileSelector(QComboBox):
             for path in paths:
                 self.addItem(os.path.basename(os.path.normpath(path)))
     
-    def current_folder(self):
-        if len(self.files) > 1 and self.currentIndex() > 0:
-            return self.files[self.currentIndex() - 1]
+    def current_file(self):
+        text = self.currentText()
+        if text is not '--':
+            return self.currentText()
 
 
 class FileAssignRow(QWidget):

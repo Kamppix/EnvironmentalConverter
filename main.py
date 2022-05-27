@@ -30,8 +30,8 @@ class MusicPack:
         name = re.sub(r'[^a-z0-9/._-]', '', name) + '.ogg'
         return name
 
-    def from_files(source, target):
-        source
+    def from_files(sources, target):
+        pass
 
     def from_youtube(url, target):
         NewThread(target = youtube.create_pack, args = (url, target))
