@@ -27,36 +27,65 @@ class MusicPack:
         name = name.strip().lower().replace('-', '_').replace(' ', '_')
         while '__' in name:
             name = name.replace('__', '_')
-        name = re.sub(r'[^a-z0-9/._-]', '', name) + '.ogg'
+        name = re.sub(r'[^a-z0-9/._-]', '', name)
         return name
 
     def from_files(sources, target):
-        pass
+        NewThread(target = MusicPack.create_from_files, args = (sources, target))
 
     def from_youtube(url, target):
         NewThread(target = youtube.create_pack, args = (url, target))
 
     def from_terraria(source, target):
-        shutil.rmtree(target)
-        Logger.log('Removed the existing directory and its contents')
         NewThread(target = MusicPack.create_from_terraria, args = (source, target))
     
+    def create_from_files(sources: list[str], target):
+        sounds_folder, sounds_target = MusicPack.init_target(target, False)
+        
+        Logger.log('Creating music pack...')
+        # Copy music
+        with open(sounds_target, 'r+') as sounds_file:
+            sounds_data = json.load(sounds_file)
+            key_list = list(sounds_data.keys())
+            for i in range(len(sources)):
+                file_path = sources[i]
+                if file_path.endswith('--'):
+                    sounds_data.pop(key_list[i])
+                    continue
+
+                filename = MusicPack.convert_filename(os.path.basename(os.path.normpath(file_path)))
+                name = filename[:-4]
+                sounds_data[key_list[i]]['sounds'][0]['name'] = 'environmentalmusic:' + name
+                target_file = os.path.join(sounds_folder, name + '.ogg')
+                   
+                if filename.endswith('.mp3') or filename.endswith('.wav'):
+                    # Convert to OGG
+                    Logger.log('Converting "' + filename + '" to OGG...')
+                    (
+                        ffmpeg.input(file_path)
+                        .output(target_file)
+                        .run(quiet=True, overwrite_output=True, cmd=os.path.join(os.getcwd(), 'ffmpeg.exe'))
+                    )
+                else:
+                    # Copy file
+                    shutil.copy(file_path, target_file)
+                    Logger.log('Copied "' + filename + '"')
+                    continue
+
+            Logger.log('Writing sounds.json...')
+            sounds_file.seek(0)
+            json.dump(sounds_data, sounds_file, indent = 2)
+            sounds_file.truncate()
+
+        pack_png = os.path.join(os.path.dirname(sources[0]), 'pack.png')
+        if os.path.exists(pack_png) and os.path.isfile(pack_png):
+            shutil.copy(pack_png, os.path.join(target, 'pack.png'))
+            Logger.log('Copied "pack.png"')
+                    
+        Logger.log('Music pack creation successful!')
+    
     def create_from_terraria(source, target):
-        sounds_folder = os.path.join(target, 'assets', 'environmentalmusic', 'sounds')
-        if not os.path.exists(sounds_folder):
-            os.makedirs(sounds_folder)
-
-        Logger.log('Copying template files...')
-        # Copy files from music pack template
-        template_source = os.path.join(os.getcwd(), 'music_packs', 'template')
-        pack_source = os.path.join(template_source, 'pack.mcmeta')
-        sounds_source = os.path.join(template_source, 'assets', 'environmentalmusic', 'sounds_terraria.json')
-
-        pack_target = os.path.join(target, 'pack.mcmeta')
-        sounds_target = os.path.join(target, 'assets', 'environmentalmusic', 'sounds.json')
-
-        shutil.copy(pack_source, pack_target)
-        shutil.copy(sounds_source, sounds_target)
+        sounds_folder, sounds_target = MusicPack.init_target(target, True)
         
         Logger.log('Copying music pack files...')
         # Copy pack icon
@@ -95,6 +124,28 @@ class MusicPack:
                     )
                     
         Logger.log('Music pack conversion successful!')
+    
+    def init_target(target, is_terraria):
+        sounds_folder = os.path.join(target, 'assets', 'environmentalmusic', 'sounds')
+        if not os.path.exists(sounds_folder):
+            os.makedirs(sounds_folder)
+
+        Logger.log('Copying template files...')
+        # Copy files from music pack template
+        template_source = os.path.join(os.getcwd(), 'music_packs', 'template')
+        pack_source = os.path.join(template_source, 'pack.mcmeta')
+        if is_terraria:
+            sounds_source = os.path.join(template_source, 'assets', 'environmentalmusic', 'sounds_terraria.json')
+        else:
+            sounds_source = os.path.join(template_source, 'assets', 'environmentalmusic', 'sounds.json')
+
+        pack_target = os.path.join(target, 'pack.mcmeta')
+        sounds_target = os.path.join(target, 'assets', 'environmentalmusic', 'sounds.json')
+
+        shutil.copy(pack_source, pack_target)
+        shutil.copy(sounds_source, sounds_target)
+    
+        return sounds_folder, sounds_target
 
 
 def main():

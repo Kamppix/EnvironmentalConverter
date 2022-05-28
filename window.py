@@ -1,5 +1,5 @@
 from dataclasses import replace
-import os, json
+import os, shutil, json
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout, QComboBox, QFrame, QLineEdit, QMessageBox, QScrollArea, QSizePolicy
 from PyQt6.QtGui import QIcon, QTextOption, QTextCursor
 from PyQt6.QtCore import Qt
@@ -34,7 +34,7 @@ class TextField(QLineEdit):
         if self.objectName() == 'files_source_path':
             file_paths = None
             try:
-                file_paths = [f.path for f in os.scandir(self.text()) if f.is_file() and f.name.endswith('.ogg')]
+                file_paths = [f.path for f in os.scandir(self.text()) if f.is_file() and (f.name.endswith('.ogg') or f.name.endswith('.mp3') or f.name.endswith('.wav'))]
             except FileNotFoundError:
                 pass
             
@@ -129,8 +129,13 @@ class CreateButton(QPushButton):
     def clicked_event(self):
         index = self.parent().parent().findChild(QTabWidget, 'tabs').currentIndex()
         if index == 0:
-            source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
-            MusicPack.from_files([os.path.join(source_folder, f.current_file()) for f in self.parent().parent().findChildren(FileSelector, 'files_selector') if f.current_file() is not None], self.parent().findChild(TextField, 'target_path').text())
+            target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), self.parent().parent().findChild(TextField, 'files_pack_name').text())
+            if os.path.exists(target) and Application.overwrite_pack(self):
+                shutil.rmtree(target)
+                Logger.log('Removed the existing directory and its contents')
+            if not os.path.exists(target):
+                source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
+                MusicPack.from_files([os.path.join(source_folder, f.current_file()) for f in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
 
         elif index == 1:
             MusicPack.from_youtube(self.parent().parent().findChild(TextField, 'youtube_source_url').text(), self.parent().findChild(TextField, 'target_path').text())
@@ -142,7 +147,10 @@ class CreateButton(QPushButton):
                 with open(os.path.join(source, 'pack.json')) as pack_file:
                     title = json.load(pack_file)['Name']
                 target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), title)
-                if not os.path.exists(target) or Application.overwrite_pack(self):
+                if os.path.exists(target) and Application.overwrite_pack(self):
+                    shutil.rmtree(target)
+                    Logger.log('Removed the existing directory and its contents')
+                if not os.path.exists(target):
                     MusicPack.from_terraria(source, target)
 
 
@@ -180,9 +188,7 @@ class FileSelector(QComboBox):
                 self.addItem(os.path.basename(os.path.normpath(path)))
     
     def current_file(self):
-        text = self.currentText()
-        if text is not '--':
-            return self.currentText()
+        return self.currentText()
 
 
 class FileAssignRow(QWidget):
@@ -219,16 +225,17 @@ class FileAssigner(QScrollArea):
 class AppTab(QWidget):
     def __init__(self, parent: QMainWindow, index: int):
         super().__init__(parent)
-
-        # Create source row
         v_box = QVBoxLayout(self)
 
+        # Create source row
         row = QWidget(self)
         v_box.addWidget(row)
         grid = QGridLayout(row)
         row.setLayout(grid)
 
         if index == 0:
+            self.setObjectName('files_tab')
+
             grid.addWidget(Label('Source folder:', self), 0, 0)
 
             source_path = TextField(os.getcwd(), self)
@@ -239,9 +246,16 @@ class AppTab(QWidget):
             browse_source_button.setObjectName('files_browse_button')
             grid.addWidget(browse_source_button, 0, 2)
 
+            grid.addWidget(Label('Pack name:', self), 1, 0)
+            pack_name = TextField(None, self)
+            pack_name.setObjectName('files_pack_name')
+            grid.addWidget(pack_name, 1, 1)
+
             v_box.addWidget(FileAssigner(self))
 
         elif index == 1:
+            self.setObjectName('youtube_tab')
+
             grid.addWidget(Label('Playlist URL:', self), 0, 0)
 
             source_url = TextField('', self)
@@ -251,6 +265,8 @@ class AppTab(QWidget):
             v_box.addWidget(FileAssigner(self))
 
         elif index == 2:
+            self.setObjectName('terraria_tab')
+
             grid.addWidget(Label('Source folder:', self), 0, 0)
 
             source_path = TextField(SYSTEM_PATHS[platform]['terraria'], self)

@@ -64,7 +64,7 @@ def get_videos(playlist: Playlist, target):
 
     for video in videos:
         title = video.title
-        name = MusicPack.convert_filename(title)
+        name = MusicPack.convert_filename(title) + '.ogg'
 
         if os.path.exists(os.path.join(sounds_path, name)):
             Logger.log('"' + name + '" already exists')
