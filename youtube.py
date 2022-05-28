@@ -14,7 +14,7 @@ def create_pack(url, target):
     try:
         title = playlist.title
     except KeyError:
-        Logger.log('Invalid playlist URL')
+        Logger.log('Invalid playlist URL!')
         return
 
     Logger.log('Creating music pack from URL...')

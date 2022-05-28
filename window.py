@@ -129,13 +129,18 @@ class CreateButton(QPushButton):
     def clicked_event(self):
         index = self.parent().parent().findChild(QTabWidget, 'tabs').currentIndex()
         if index == 0:
-            target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), self.parent().parent().findChild(TextField, 'files_pack_name').text())
-            if os.path.exists(target) and Application.overwrite_pack(self):
-                shutil.rmtree(target)
-                Logger.log('Removed the existing directory and its contents')
-            if not os.path.exists(target):
-                source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
-                MusicPack.from_files([os.path.join(source_folder, f.current_file()) for f in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
+            pack_name = self.parent().parent().findChild(AppTab, 'files_tab').findChild(TextField, 'files_pack_name').text()
+            if len(pack_name) == 0 or string_contains_characters(pack_name, '\\/:*?"<>|'):
+                Logger.log('Invalid pack name!')
+            else:
+                target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), pack_name)
+                if os.path.exists(target) and Application.overwrite_pack(self):
+                    shutil.rmtree(target)
+                    Logger.log('Removed the existing directory and its contents')
+                if not os.path.exists(target):
+                    source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
+                    MusicPack.from_files([os.path.join(source_folder, f.current_file()) for f in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
+                
 
         elif index == 1:
             MusicPack.from_youtube(self.parent().parent().findChild(TextField, 'youtube_source_url').text(), self.parent().findChild(TextField, 'target_path').text())
@@ -208,10 +213,12 @@ class FileAssignRow(QWidget):
 class FileAssigner(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setFixedHeight(120)
+        self.setFixedHeight(127)
         child = QWidget(self)
         child.setMinimumHeight(100)
         v_box = QVBoxLayout(child)
+        v_box.setSpacing(0)
+        v_box.setContentsMargins(0, 0, 0, 0)
         v_box.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         v_box.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinAndMaxSize)
         child.setLayout(v_box)
@@ -262,6 +269,11 @@ class AppTab(QWidget):
             source_url.setObjectName('youtube_source_url')
             grid.addWidget(source_url, 0, 1)
 
+            grid.addWidget(Label('Pack name:', self), 1, 0)
+            pack_name = TextField(None, self)
+            pack_name.setObjectName('files_pack_name')
+            grid.addWidget(pack_name, 1, 1)
+
             v_box.addWidget(FileAssigner(self))
 
         elif index == 2:
@@ -303,7 +315,7 @@ class Application(QApplication):
         # Create tabs
         tabs = QTabWidget(column)
         tabs.setObjectName('tabs')
-        tabs.setFixedHeight(240)
+        tabs.setFixedHeight(255)
         tabs.addTab(AppTab(column, 0), 'Local files')
         tabs.addTab(AppTab(column, 1), 'YouTube')
         tabs.addTab(AppTab(column, 2), 'Terraria')
@@ -366,4 +378,10 @@ class Application(QApplication):
     def instance():
         global app_instance
         return app_instance
+
+
+def string_contains_characters(string, characters):
+    for c in characters:
+        if c in string:
+            return True
         

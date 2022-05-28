@@ -41,8 +41,13 @@ class MusicPack:
     
     def create_from_files(sources: list[str], target):
         sounds_folder, sounds_target = MusicPack.init_target(target, False)
+
+        # Copy pack icon
+        pack_png = os.path.join(os.path.dirname(sources[0]), 'pack.png')
+        if os.path.exists(pack_png) and os.path.isfile(pack_png):
+            shutil.copy(pack_png, os.path.join(target, 'pack.png'))
+            Logger.log('Copied "pack.png"')
         
-        Logger.log('Creating music pack...')
         # Copy music
         with open(sounds_target, 'r+') as sounds_file:
             sounds_data = json.load(sounds_file)
@@ -76,23 +81,18 @@ class MusicPack:
             sounds_file.seek(0)
             json.dump(sounds_data, sounds_file, indent = 2)
             sounds_file.truncate()
-
-        pack_png = os.path.join(os.path.dirname(sources[0]), 'pack.png')
-        if os.path.exists(pack_png) and os.path.isfile(pack_png):
-            shutil.copy(pack_png, os.path.join(target, 'pack.png'))
-            Logger.log('Copied "pack.png"')
                     
         Logger.log('Music pack creation successful!')
     
     def create_from_terraria(source, target):
         sounds_folder, sounds_target = MusicPack.init_target(target, True)
         
-        Logger.log('Copying music pack files...')
         # Copy pack icon
         icon_source = os.path.join(source, 'icon.png')
         if os.path.exists(icon_source):
             icon_target = os.path.join(target, 'pack.png')
             shutil.copy(icon_source, icon_target)
+            Logger.log('Copied pack icon')
 
         # Copy music
         music_source = os.path.join(source, 'Content', 'Music')
