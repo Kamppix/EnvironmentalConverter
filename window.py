@@ -1,4 +1,3 @@
-from dataclasses import replace
 import os, shutil, json
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout, QComboBox, QFrame, QLineEdit, QMessageBox, QScrollArea, QSizePolicy
 from PyQt6.QtGui import QIcon, QTextOption, QTextCursor
@@ -204,7 +203,7 @@ class FileAssignRow(QWidget):
         self.setLayout(row)
 
         label = QLabel(title + ':', self)
-        label.setFixedWidth(90)
+        label.setFixedWidth(93)
         row.addWidget(label)
         music_packs = FileSelector(self)
         row.addWidget(music_packs)
@@ -214,14 +213,16 @@ class FileAssigner(QScrollArea):
     def __init__(self, parent):
         super().__init__(parent)
         self.setFixedHeight(127)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.setWidgetResizable(True)
         child = QWidget(self)
-        child.setMinimumHeight(100)
         v_box = QVBoxLayout(child)
         v_box.setSpacing(0)
         v_box.setContentsMargins(0, 0, 0, 0)
         v_box.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         v_box.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinAndMaxSize)
         child.setLayout(v_box)
+        self.setWidget(child)
 
         with open(os.path.join(os.getcwd(), 'music_packs', 'template', 'assets', 'environmentalmusic', 'sounds.json')) as sounds_file:
             sounds_data = json.load(sounds_file)
