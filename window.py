@@ -128,7 +128,7 @@ class CreateButton(QPushButton):
     def clicked_event(self):
         index = self.parent().parent().findChild(QTabWidget, 'tabs').currentIndex()
         if index == 0:
-            pack_name = self.parent().parent().findChild(AppTab, 'files_tab').findChild(TextField, 'files_pack_name').text()
+            pack_name = self.parent().parent().findChild(TextField, 'files_pack_name').text()
             if len(pack_name) == 0 or string_contains_characters(pack_name, '\\/:*?"<>|'):
                 Logger.log('Invalid pack name!')
             else:
@@ -142,7 +142,24 @@ class CreateButton(QPushButton):
                 
 
         elif index == 1:
-            MusicPack.from_youtube(self.parent().parent().findChild(TextField, 'youtube_source_url').text(), self.parent().findChild(TextField, 'target_path').text())
+            playlist = Playlist(self.parent().parent().findChild(TextField, 'youtube_source_url').text())
+            try:
+                title = playlist.title
+            except KeyError:
+                Logger.log('Invalid playlist URL!')
+                return
+
+            pack_name = self.parent().parent().findChild(TextField, 'youtube_pack_name').text()
+            if len(pack_name) == 0 or string_contains_characters(pack_name, '\\/:*?"<>|'):
+                Logger.log('Invalid pack name!')
+            else:
+                target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), pack_name)
+                if os.path.exists(target) and Application.overwrite_pack(self):
+                    shutil.rmtree(target)
+                    Logger.log('Removed the existing directory and its contents')
+                if not os.path.exists(target):
+                    source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
+                    MusicPack.from_youtube(playlist, [f.currentIndex() - 1 for f in self.parent().parent().findChild(AppTab, 'youtube_tab').findChildren(FileSelector, 'files_selector')], target)
             
         elif index == 2:
             selected_pack = self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').current_folder()
@@ -272,7 +289,7 @@ class AppTab(QWidget):
 
             grid.addWidget(Label('Pack name:', self), 1, 0)
             pack_name = TextField(None, self)
-            pack_name.setObjectName('files_pack_name')
+            pack_name.setObjectName('youtube_pack_name')
             grid.addWidget(pack_name, 1, 1)
 
             v_box.addWidget(FileAssigner(self))

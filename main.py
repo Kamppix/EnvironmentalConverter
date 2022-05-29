@@ -9,9 +9,6 @@ from threading import Thread
 import window
 
 
-TERRARIA_URL = 'https://youtube.com/playlist?list=PLmEInNWnJt01A24SN36oWl4OufV4L6Oex'
-
-
 class Logger:
     def log(line):
         '''Print a line with a timestamp to the console and the window log box.'''
@@ -41,8 +38,8 @@ class MusicPack:
     def from_files(sources, target):
         NewThread(target = MusicPack.create_from_files, args = (sources, target))
 
-    def from_youtube(url, target):
-        NewThread(target = Youtube.create_pack, args = (url, target))
+    def from_youtube(playlist, selected, target):
+        NewThread(target = Youtube.create_pack, args = (playlist, selected, target))
 
     def from_terraria(source, target):
         NewThread(target = MusicPack.create_from_terraria, args = (source, target))
@@ -157,36 +154,20 @@ class MusicPack:
         
 
 class Youtube():
-    def create_pack(url, target):
-        playlist = Playlist(url)
-        try:
-            title = playlist.title
-        except KeyError:
-            Logger.log('Invalid playlist URL!')
-            return
-
-        Logger.log('Creating music pack from URL...')
-        
-        is_terraria = False
-        if playlist == Playlist(TERRARIA_URL):
-            is_terraria = True
-
-        target_path = os.path.join(target, title)
-        sounds_folder = os.path.join(target_path, 'assets', 'environmentalmusic', 'sounds')
+    def create_pack(playlist, selected, target):
+        Logger.log('Creating music pack from playlist...')
+        sounds_folder = os.path.join(target, 'assets', 'environmentalmusic', 'sounds')
         if not os.path.exists(sounds_folder):
             os.makedirs(sounds_folder)
 
         Logger.log('Copying template files...')
-        if is_terraria:
-            source = os.path.join(os.getcwd(), 'music_packs', 'Terraria Music Pack')
-        else:
-            source = os.path.join(os.getcwd(), 'music_packs', 'template')
+        source = os.path.join(os.getcwd(), 'music_packs', 'template')
 
         pack_source = os.path.join(source, 'pack.mcmeta')
         sounds_source = os.path.join(source, 'assets', 'environmentalmusic', 'sounds.json')
 
-        pack_target = os.path.join(target_path, 'pack.mcmeta')
-        sounds_target = os.path.join(target_path, 'assets', 'environmentalmusic', 'sounds.json')
+        pack_target = os.path.join(target, 'pack.mcmeta')
+        sounds_target = os.path.join(target, 'assets', 'environmentalmusic', 'sounds.json')
 
         shutil.copy(pack_source, pack_target)
         shutil.copy(sounds_source, sounds_target)
@@ -206,7 +187,7 @@ class Youtube():
         '''Download videos from given Playlist object and convert them into OGG files in a resource pack.'''
 
         Logger.log('Getting videos from playlist "' + playlist.title + '"...')
-        sounds_path = os.path.join(target, playlist.title, 'assets', 'environmentalmusic', 'sounds')
+        sounds_path = os.path.join(target, 'assets', 'environmentalmusic', 'sounds')
 
         videos = playlist.videos
 
