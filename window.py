@@ -289,7 +289,7 @@ class MusicAssigner(QScrollArea):
         child.setLayout(v_box)
         self.setWidget(child)
 
-        with open(os.path.join(os.getcwd(), 'music_packs', 'template', 'assets', 'environmentalmusic', 'sounds.json')) as sounds_file:
+        with open(os.path.join(os.getcwd(), 'template_pack', 'assets', 'environmentalmusic', 'sounds.json')) as sounds_file:
             sounds_data = json.load(sounds_file)
             for event, _ in sounds_data.items():
                 v_box.addWidget(row(event[6:].replace('_', ' ').capitalize(), self))
