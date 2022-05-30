@@ -138,7 +138,7 @@ class MusicPack:
 
         Logger.log('Copying template files...')
         # Copy files from music pack template
-        template_source = os.path.join(os.getcwd(), 'template')
+        template_source = os.path.join(os.getcwd(), 'template_pack')
         pack_source = os.path.join(template_source, 'pack.mcmeta')
         if is_terraria:
             sounds_source = os.path.join(template_source, 'assets', 'environmentalmusic', 'sounds_terraria.json')
