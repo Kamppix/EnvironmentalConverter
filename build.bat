@@ -1,4 +1,4 @@
-pyinstaller --onefile --icon=app_icon.ico --clean main.py
+pyinstaller --onefile --icon=app_icon.ico --clean main.pyw
 md bin
 copy "dist\main.exe" "bin\PixelMusicPacker.exe" /y
 copy "app_icon.ico" "bin\app_icon.ico" /y
