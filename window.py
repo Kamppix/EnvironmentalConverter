@@ -1,8 +1,10 @@
 import os, shutil, json
+from sys import platform
+from time import sleep
+from main import NewThread
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout, QComboBox, QFrame, QLineEdit, QMessageBox, QScrollArea, QSizePolicy
 from PyQt6.QtGui import QIcon, QTextOption, QTextCursor
 from PyQt6.QtCore import Qt
-from sys import platform
 from pytube.contrib.playlist import Playlist
 from urllib.error import URLError
 
@@ -39,17 +41,6 @@ class TextField(QLineEdit):
             
             for selector in self.parent().parent().findChildren(FileSelector, 'files_selector'):
                 selector.set_files(file_paths)
-
-        if self.objectName() == 'youtube_source_url':
-            video_titles = None
-            try:
-                playlist = Playlist(self.text())
-                video_titles = [v.title for v in playlist.videos]
-            except (ConnectionResetError, URLError, KeyError):
-                pass
-            
-            for selector in self.parent().parent().findChildren(FileSelector, 'files_selector'):
-                selector.set_files(video_titles)
             
         elif self.objectName() == 'terraria_source_path':
             pack_paths = None
@@ -58,6 +49,37 @@ class TextField(QLineEdit):
             except FileNotFoundError:
                 pass
             self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').set_packs(pack_paths)
+
+
+class FetchVideosButton(QPushButton):
+    def __init__(self, parent):
+        super().__init__(QApplication.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload), '', parent)
+        self.setObjectName('youtube_fetch_button')
+        self.setFixedSize(26, 26)
+        self.setToolTip('Fetch playlist')
+        self.clicked.connect(self.button_pushed)
+
+    def button_pushed(self):
+        NewThread(target = self.fetch)
+
+    def fetch(self):
+        Logger.log('Fetching playlist data...')
+        video_titles = None
+        url = self.parent().findChild(TextField, 'youtube_source_url').text()
+        while True:
+            try:
+                self.playlist = Playlist(url)
+                video_titles = [v.title for v in self.playlist.videos]
+                Logger.log('Found playlist "' + self.playlist.title + '" with ' + str(len(video_titles)) + ' videos')
+                for selector in self.parent().parent().findChildren(VideoSelector, 'video_selector'):
+                    selector.set_videos(video_titles)
+                break
+            except (ConnectionResetError, URLError):
+                Logger.log('Connection to YouTube lost. Trying again in 3 seconds...')
+                sleep(3)
+            except KeyError:
+                Logger.log('Invalid playlist URL!')
+                return
             
 
 class MusicPackSelector(QComboBox):
@@ -103,6 +125,7 @@ class BrowseButton(QPushButton):
     def __init__(self, parent):
         super().__init__(QApplication.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon), '', parent)
         self.setFixedSize(26, 26)
+        self.setToolTip('Browse')
         self.clicked.connect(self.clicked_event)
 
     def clicked_event(self):
@@ -123,6 +146,7 @@ class CreateButton(QPushButton):
     def __init__(self, parent):
         super().__init__('Create', parent)
         self.setFixedHeight(26)
+        self.setToolTip('Create music pack')
         self.clicked.connect(self.clicked_event)
 
     def clicked_event(self):
@@ -138,18 +162,13 @@ class CreateButton(QPushButton):
                     Logger.log('Removed the existing directory and its contents')
                 if not os.path.exists(target):
                     source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
-                    MusicPack.from_files([os.path.join(source_folder, f.current_file()) for f in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
+                    MusicPack.from_files([os.path.join(source_folder, s.current_file()) for s in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
                 
 
         elif index == 1:
-            playlist = Playlist(self.parent().parent().findChild(TextField, 'youtube_source_url').text())
-            try:
-                title = playlist.title
-            except KeyError:
-                Logger.log('Invalid playlist URL!')
-                return
-
+            playlist = self.parent().parent().findChild(FetchVideosButton, 'youtube_fetch_button').playlist
             pack_name = self.parent().parent().findChild(TextField, 'youtube_pack_name').text()
+
             if len(pack_name) == 0 or string_contains_characters(pack_name, '\\/:*?"<>|'):
                 Logger.log('Invalid pack name!')
             else:
@@ -158,8 +177,7 @@ class CreateButton(QPushButton):
                     shutil.rmtree(target)
                     Logger.log('Removed the existing directory and its contents')
                 if not os.path.exists(target):
-                    source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
-                    MusicPack.from_youtube(playlist, [f.currentIndex() - 1 for f in self.parent().parent().findChild(AppTab, 'youtube_tab').findChildren(FileSelector, 'files_selector')], target)
+                    MusicPack.from_youtube(playlist, [s.currentIndex() - 1 for s in self.parent().parent().findChild(AppTab, 'youtube_tab').findChildren(VideoSelector, 'video_selector')], target)
             
         elif index == 2:
             selected_pack = self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').current_folder()
@@ -179,7 +197,7 @@ class LogBox(QTextEdit):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName('log_box')
-        self.setFixedHeight(128)
+        self.setFixedHeight(100)
         self.setReadOnly(True)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -193,11 +211,41 @@ class LogBox(QTextEdit):
         self.moveCursor(QTextCursor.MoveOperation.End)
 
 
+class VideoSelector(QComboBox):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setObjectName('video_selector')
+        self.setFixedWidth(360)
+        self.addItem('--')
+    
+    def set_videos(self, titles):
+        for _ in range(self.count() - 1):
+            self.removeItem(1)
+        
+        if titles is not None:
+            for title in titles:
+                self.addItem(title)
+
+
+class VideoAssignRow(QWidget):
+    def __init__(self, title, parent):
+        super().__init__(parent)
+        self.setFixedSize(480, 40)
+        row = QHBoxLayout(self)
+        self.setLayout(row)
+
+        label = QLabel(title + ':', self)
+        label.setFixedWidth(100)
+        row.addWidget(label)
+        videos = VideoSelector(self)
+        row.addWidget(videos)
+
+
 class FileSelector(QComboBox):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName('files_selector')
-        self.setFixedWidth(300)
+        self.setFixedWidth(360)
         self.addItem('--')
     
     def set_files(self, paths):
@@ -215,28 +263,28 @@ class FileSelector(QComboBox):
 class FileAssignRow(QWidget):
     def __init__(self, title, parent):
         super().__init__(parent)
-        self.setFixedSize(420, 40)
+        self.setFixedSize(480, 40)
         row = QHBoxLayout(self)
         self.setLayout(row)
 
         label = QLabel(title + ':', self)
-        label.setFixedWidth(93)
+        label.setFixedWidth(100)
         row.addWidget(label)
-        music_packs = FileSelector(self)
-        row.addWidget(music_packs)
+        files = FileSelector(self)
+        row.addWidget(files)
 
 
-class FileAssigner(QScrollArea):
-    def __init__(self, parent):
+class MusicAssigner(QScrollArea):
+    def __init__(self, row, parent):
         super().__init__(parent)
-        self.setFixedHeight(127)
+        self.setFixedHeight(155)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setWidgetResizable(True)
         child = QWidget(self)
         v_box = QVBoxLayout(child)
         v_box.setSpacing(0)
         v_box.setContentsMargins(0, 0, 0, 0)
-        v_box.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        v_box.setAlignment(Qt.AlignmentFlag.AlignLeft)
         v_box.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinAndMaxSize)
         child.setLayout(v_box)
         self.setWidget(child)
@@ -244,7 +292,7 @@ class FileAssigner(QScrollArea):
         with open(os.path.join(os.getcwd(), 'music_packs', 'template', 'assets', 'environmentalmusic', 'sounds.json')) as sounds_file:
             sounds_data = json.load(sounds_file)
             for event, _ in sounds_data.items():
-                v_box.addWidget(FileAssignRow(event[6:].replace('_', ' ').capitalize(), self))
+                v_box.addWidget(row(event[6:].replace('_', ' ').capitalize(), self))
 
 
 class AppTab(QWidget):
@@ -276,7 +324,7 @@ class AppTab(QWidget):
             pack_name.setObjectName('files_pack_name')
             grid.addWidget(pack_name, 1, 1)
 
-            v_box.addWidget(FileAssigner(self))
+            v_box.addWidget(MusicAssigner(FileAssignRow, self))
 
         elif index == 1:
             self.setObjectName('youtube_tab')
@@ -287,12 +335,15 @@ class AppTab(QWidget):
             source_url.setObjectName('youtube_source_url')
             grid.addWidget(source_url, 0, 1)
 
+            fetch_videos_button = FetchVideosButton(self)
+            grid.addWidget(fetch_videos_button, 0, 2)
+
             grid.addWidget(Label('Pack name:', self), 1, 0)
             pack_name = TextField(None, self)
             pack_name.setObjectName('youtube_pack_name')
             grid.addWidget(pack_name, 1, 1)
 
-            v_box.addWidget(FileAssigner(self))
+            v_box.addWidget(MusicAssigner(VideoAssignRow, self))
 
         elif index == 2:
             self.setObjectName('terraria_tab')
@@ -333,7 +384,7 @@ class Application(QApplication):
         # Create tabs
         tabs = QTabWidget(column)
         tabs.setObjectName('tabs')
-        tabs.setFixedHeight(255)
+        tabs.setFixedHeight(283)
         tabs.addTab(AppTab(column, 0), 'Local files')
         tabs.addTab(AppTab(column, 1), 'YouTube')
         tabs.addTab(AppTab(column, 2), 'Terraria')

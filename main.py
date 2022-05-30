@@ -90,6 +90,7 @@ class MusicPack:
         Logger.log('Music pack creation successful!')
     
     def create_from_terraria(source, target):
+        Logger.log('Converting Terraria music pack...')
         sounds_folder, sounds_target = MusicPack.init_target(target, True)
         
         # Copy pack icon
@@ -156,85 +157,96 @@ class MusicPack:
 class Youtube():
     def create_pack(playlist, selected, target):
         Logger.log('Creating music pack from playlist...')
-        sounds_folder = os.path.join(target, 'assets', 'environmentalmusic', 'sounds')
-        if not os.path.exists(sounds_folder):
-            os.makedirs(sounds_folder)
 
-        Logger.log('Copying template files...')
-        source = os.path.join(os.getcwd(), 'music_packs', 'template')
+        sounds_folder, sounds_target = MusicPack.init_target(target, False)
 
-        pack_source = os.path.join(source, 'pack.mcmeta')
-        sounds_source = os.path.join(source, 'assets', 'environmentalmusic', 'sounds.json')
+        filenames = Youtube.get_videos(playlist, selected, sounds_folder)
+        
+        with open(sounds_target, 'r+') as sounds_file:
+            Logger.log('Writing sounds.json...')
+            sounds_data = json.load(sounds_file)
+            key_list = list(sounds_data.keys())
+            for i in range(len(filenames)):
+                name = filenames[i]
+                if name is None:
+                    sounds_data.pop(key_list[i])
+                    continue
+                sounds_data[key_list[i]]['sounds'][0]['name'] = 'environmentalmusic:' + name
 
-        pack_target = os.path.join(target, 'pack.mcmeta')
-        sounds_target = os.path.join(target, 'assets', 'environmentalmusic', 'sounds.json')
-
-        shutil.copy(pack_source, pack_target)
-        shutil.copy(sounds_source, sounds_target)
-
-        while True:
-            try:
-                Youtube.get_videos(playlist, target)
-                break
-            except (ConnectionResetError, URLError) as e:
-                Logger.log('Connection to YouTube reset.\nTrying again in 5 seconds...')
-                sleep(5)
+            sounds_file.seek(0)
+            json.dump(sounds_data, sounds_file, indent = 2)
+            sounds_file.truncate()
 
         Logger.log('Music pack creation successful!')
 
 
-    def get_videos(playlist: Playlist, target):
+    def get_videos(playlist: Playlist, selected, sounds_folder):
         '''Download videos from given Playlist object and convert them into OGG files in a resource pack.'''
 
         Logger.log('Getting videos from playlist "' + playlist.title + '"...')
-        sounds_path = os.path.join(target, 'assets', 'environmentalmusic', 'sounds')
 
         videos = playlist.videos
+        filenames = {}
 
-        for video in videos:
-            title = video.title
-            name = MusicPack.convert_filename(title) + '.ogg'
+        for i in range(len(videos)):
+            if i in selected:
+                video = videos[i]
+                title = video.title
 
-            if os.path.exists(os.path.join(sounds_path, name)):
-                Logger.log('"' + name + '" already exists')
-                continue
+                name = MusicPack.convert_filename(title) + '.ogg'
 
-            # Extract only audio
-            Logger.log('Downloading "' + title + '"...')
-            video = video.streams.filter(only_audio=True).first()
+                for j in range(len(selected)):
+                    if selected[j] == i:
+                        filenames[j] = name[:-4]
+                    elif selected[j] == -1:
+                        filenames[j] = None
 
-            # Download file
-            temp_mp4 = video.download(output_path = sounds_path)
+                if os.path.exists(os.path.join(sounds_folder, name)):
+                    Logger.log('"' + name + '" already exists')
+                    continue
 
-            base, ext = os.path.splitext(temp_mp4)
-            temp_ogg = base + '.ogg'
-            
-            # Convert to .ogg
-            Logger.log('Converting to OGG...')
-            (
-                ffmpeg.input(temp_mp4)
-                .output(temp_ogg)
-                .run(quiet=True, overwrite_output=True, cmd=os.path.join(os.getcwd(), 'ffmpeg.exe'))
-            )
+                while True:
+                    try:
+                        # Extract only audio
+                        video = video.streams.filter(only_audio=True).first()
+                        # Download file
+                        Logger.log('Downloading "' + title + '"...')
+                        temp_mp4 = video.download(output_path = sounds_folder)
+                        break
+                    except (ConnectionResetError, URLError) as e:
+                        Logger.log('Connection to YouTube lost. Trying again in 3 seconds...')
+                        sleep(3)
 
-            # Strip silence
-            Logger.log('Stripping silence...')
-            trim_leading_silence: AudioSegment = lambda x: x[detect_leading_silence(x) :]
-            trim_trailing_silence: AudioSegment = lambda x: trim_leading_silence(x.reverse()).reverse()
-            strip_silence: AudioSegment = lambda x: trim_trailing_silence(trim_leading_silence(x))
+                base, ext = os.path.splitext(temp_mp4)
+                temp_ogg = base + '.ogg'
+                
+                # Convert to .ogg
+                Logger.log('Converting to OGG...')
+                (
+                    ffmpeg.input(temp_mp4)
+                    .output(temp_ogg)
+                    .run(quiet=True, overwrite_output=True, cmd=os.path.join(os.getcwd(), 'ffmpeg.exe'))
+                )
 
-            sound = AudioSegment.from_file(temp_ogg)
-            stripped = strip_silence(sound)
-            # stripped.apply_gain_stereo(-4)
-            path = os.path.join(sounds_path, name)
-            stripped.export(path, format='ogg')
-            Logger.log('Exported to "' + path + '"')
+                # Strip silence
+                Logger.log('Stripping silence...')
+                trim_leading_silence: AudioSegment = lambda x: x[detect_leading_silence(x) :]
+                trim_trailing_silence: AudioSegment = lambda x: trim_leading_silence(x.reverse()).reverse()
+                strip_silence: AudioSegment = lambda x: trim_trailing_silence(trim_leading_silence(x))
 
-            # Delete temporary files
-            os.remove(temp_mp4)
-            os.remove(temp_ogg)
+                sound = AudioSegment.from_file(temp_ogg)
+                stripped = strip_silence(sound)
+                # stripped.apply_gain_stereo(-4)
+                path = os.path.join(sounds_folder, name)
+                stripped.export(path, format='ogg')
+                Logger.log('Exported to "' + path + '"')
+
+                # Delete temporary files
+                os.remove(temp_mp4)
+                os.remove(temp_ogg)
 
         Logger.log('Playlist downloaded')
+        return filenames
 
 
 def main():
