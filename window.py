@@ -6,7 +6,7 @@ import os
 import sys
 import shutil
 import json
-from time import sleep
+import time
 from urllib.error import URLError
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout, QComboBox, QFrame, QLineEdit, QMessageBox, QScrollArea, QSizePolicy
 from PyQt6.QtGui import QIcon, QTextOption, QTextCursor
@@ -80,20 +80,20 @@ class FetchVideosButton(QPushButton):
         start_thread(target = self.fetch)
 
     def fetch(self):
-        log('Fetching playlist data...')
         video_titles = None
         url = self.parent().findChild(TextField, 'youtube_source_url').text()
         while True:
+            log('Fetching playlist data...')
             try:
                 self.playlist = Playlist(url)
                 video_titles = [v.title for v in self.playlist.videos]
-                log('Found playlist "' + self.playlist.title + '" with ' + str(len(video_titles)) + ' videos')
+                log('Found playlist "' + self.playlist.title + '" with ' + str(len(video_titles)) + ' videos.')
                 for selector in self.parent().parent().findChildren(VideoSelector, 'video_selector'):
                     selector.set_videos(video_titles)
                 break
             except (ConnectionResetError, URLError):
                 log('Connection to YouTube lost. Trying again in 3 seconds...')
-                sleep(3)
+                time.sleep(3)
             except KeyError:
                 log('Invalid playlist URL!')
                 return
@@ -174,9 +174,7 @@ class CreateButton(QPushButton):
                 log('Invalid pack name!')
             else:
                 target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), pack_name)
-                if os.path.exists(target) and Application.overwrite_pack(self):
-                    shutil.rmtree(target)
-                    log('Removed the existing directory and its contents')
+                overwrite_existing(self, target)
                 if not os.path.exists(target):
                     source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
                     from_files([os.path.join(source_folder, s.current_file()) for s in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
@@ -190,9 +188,7 @@ class CreateButton(QPushButton):
                 log('Invalid pack name!')
             else:
                 target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), pack_name)
-                if os.path.exists(target) and Application.overwrite_pack(self):
-                    shutil.rmtree(target)
-                    log('Removed the existing directory and its contents')
+                overwrite_existing(self, target)
                 if not os.path.exists(target):
                     from_youtube(playlist, [s.currentIndex() - 1 for s in self.parent().parent().findChild(AppTab, 'youtube_tab').findChildren(VideoSelector, 'video_selector')], target)
 
@@ -203,9 +199,7 @@ class CreateButton(QPushButton):
                 with open(os.path.join(source, 'pack.json')) as pack_file:
                     title = json.load(pack_file)['Name']
                 target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), title)
-                if os.path.exists(target) and Application.overwrite_pack(self):
-                    shutil.rmtree(target)
-                    log('Removed the existing directory and its contents')
+                overwrite_existing(self, target)
                 if not os.path.exists(target):
                     from_terraria(source, target)
 
@@ -389,7 +383,7 @@ class Application(QApplication):
         app_instance = self
 
         self.create_ui()
-        log('Application window created')
+        log('Application window created.')
         self.exec()
 
     def create_ui(self):
@@ -448,6 +442,17 @@ class Application(QApplication):
         if log_box is not None:
             log_box.append(line)
         return
+
+
+def overwrite_existing(box, target):
+    if os.path.exists(target) and overwrite_pack(box):
+        try:
+            shutil.rmtree(target)
+        except PermissionError:
+            log('Overwrite permission denied.')
+            return False
+        log('Removed the existing directory and its contents.')
+    return True
 
 
 def overwrite_pack(parent):

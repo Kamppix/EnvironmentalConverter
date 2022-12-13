@@ -47,8 +47,8 @@ def convert_filename(name):
     while '__' in name:
         name = name.replace('__', '_')
     name = re.sub(r'[^a-z0-9/._-]', '', name)
-    while name.endswith('.'):
-        name = name[:-1]
+    while name[:-4].endswith('.'):
+        name = name[:-5] + name[-4:]
     return name
 
 def from_files(sources, target):
@@ -79,7 +79,7 @@ def create_from_files(sources, target):
     pack_png = os.path.join(os.path.dirname(sources[0]), 'pack.png')
     if os.path.exists(pack_png) and os.path.isfile(pack_png):
         shutil.copy(pack_png, os.path.join(target, 'pack.png'))
-        log('Copied "pack.png"')
+        log('Copied "pack.png".')
 
     # Copy music
     with open(sounds_target, 'r+') as sounds_file:
@@ -107,7 +107,7 @@ def create_from_files(sources, target):
             else:
                 # Copy file
                 shutil.copy(file_path, target_file)
-                log('Copied "' + filename + '"')
+                log('Copied "' + filename + '".')
                 continue
 
         log('Writing sounds.json...')
@@ -157,7 +157,7 @@ def create_from_terraria(source, target):
     if os.path.exists(icon_source):
         icon_target = os.path.join(target, 'pack.png')
         shutil.copy(icon_source, icon_target)
-        log('Copied pack icon')
+        log('Copied pack icon.')
 
     # Copy music
     music_source = os.path.join(source, 'Content', 'Music')
@@ -297,7 +297,7 @@ def main():
     '''
     Main function of the program.
     '''
-    log('Program started')
+    log('Program started.')
     if sys.platform == 'win32':
         window.Application()
     else:
