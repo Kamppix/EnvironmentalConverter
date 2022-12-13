@@ -1,18 +1,27 @@
-import os, shutil, json
-from sys import platform
+'''
+Window module for Pixel Music Packer.
+'''
+
+import os
+import sys
+import shutil
+import json
 from time import sleep
-from main import NewThread
+from urllib.error import URLError
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QTabWidget, QHBoxLayout, QVBoxLayout, QLabel, QFileDialog, QStyle, QTextEdit, QGridLayout, QComboBox, QFrame, QLineEdit, QMessageBox, QScrollArea, QSizePolicy
 from PyQt6.QtGui import QIcon, QTextOption, QTextCursor
 from PyQt6.QtCore import Qt
 from pytube.contrib.playlist import Playlist
-from urllib.error import URLError
+from main import start_thread, log, from_files, from_youtube, from_terraria
 
-
-SYSTEM_PATHS = {'win32': { 'minecraft': os.path.join(os.getenv('AppData'), '.minecraft', 'resourcepacks'), 'terraria': 'C:\Program Files (x86)\Steam\steamapps\workshop\content\\105600' },
-                'darwin': { 'minecraft': '~/Library/Application Support/minecraft/resourcepacks', 'terraria': '~/Library/Application Support/Steam/steamapps/workshop/content/105600' },
-                'linux': { 'minecraft': '~/.minecraft/resourcepacks', 'terraria': '~/.steam/steam/steamapps/workshop/content/105600' }}
-
+SYSTEM_PATHS = {
+    'win32': {'minecraft': os.path.join(os.getenv('AppData') or '', '.minecraft', 'resourcepacks'),
+              'terraria': 'C:\\Program Files (x86)\\Steam\\steamapps\\workshop\\content\\105600'},
+    'darwin': {'minecraft': '~/Library/Application Support/minecraft/resourcepacks',
+               'terraria': '~/Library/Application Support/Steam/steamapps/workshop/content/105600'},
+    'linux': {'minecraft': '~/.minecraft/resourcepacks',
+              'terraria': '~/.steam/steam/steamapps/workshop/content/105600'}
+}
 
 app_instance = None
 
@@ -30,25 +39,33 @@ class TextField(QLineEdit):
         super().__init__(text, parent)
         self.setFixedHeight(26)
         self.textChanged.connect(self.text_changed_event)
-    
+
     def text_changed_event(self):
+        '''
+        Method called when text changes.
+        '''
         if self.objectName() == 'files_source_path':
-            file_paths = None
+            file_paths = []
             try:
-                file_paths = [f.path for f in os.scandir(self.text()) if f.is_file() and (f.name.endswith('.ogg') or f.name.endswith('.mp3') or f.name.endswith('.wav'))]
+                for file in os.scandir(self.text()):
+                    if file.is_file() and (file.name.endswith('.ogg')
+                                           or file.name.endswith('.mp3')
+                                           or file.name.endswith('.wav')):
+                        file_paths.append(file.path)
             except FileNotFoundError:
                 pass
-            
+
             for selector in self.parent().parent().findChildren(FileSelector, 'files_selector'):
                 selector.set_files(file_paths)
-            
+
         elif self.objectName() == 'terraria_source_path':
             pack_paths = None
             try:
                 pack_paths = [f.path for f in os.scandir(self.text()) if f.is_dir()]
             except FileNotFoundError:
                 pass
-            self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').set_packs(pack_paths)
+            self.parent().parent().findChild(MusicPackSelector,
+                                             'terraria_music_packs').set_packs(pack_paths)
 
 
 class FetchVideosButton(QPushButton):
@@ -60,27 +77,27 @@ class FetchVideosButton(QPushButton):
         self.clicked.connect(self.button_pushed)
 
     def button_pushed(self):
-        NewThread(target = self.fetch)
+        start_thread(target = self.fetch)
 
     def fetch(self):
-        Logger.log('Fetching playlist data...')
+        log('Fetching playlist data...')
         video_titles = None
         url = self.parent().findChild(TextField, 'youtube_source_url').text()
         while True:
             try:
                 self.playlist = Playlist(url)
                 video_titles = [v.title for v in self.playlist.videos]
-                Logger.log('Found playlist "' + self.playlist.title + '" with ' + str(len(video_titles)) + ' videos')
+                log('Found playlist "' + self.playlist.title + '" with ' + str(len(video_titles)) + ' videos')
                 for selector in self.parent().parent().findChildren(VideoSelector, 'video_selector'):
                     selector.set_videos(video_titles)
                 break
             except (ConnectionResetError, URLError):
-                Logger.log('Connection to YouTube lost. Trying again in 3 seconds...')
+                log('Connection to YouTube lost. Trying again in 3 seconds...')
                 sleep(3)
             except KeyError:
-                Logger.log('Invalid playlist URL!')
+                log('Invalid playlist URL!')
                 return
-            
+
 
 class MusicPackSelector(QComboBox):
     def __init__(self, parent):
@@ -88,12 +105,12 @@ class MusicPackSelector(QComboBox):
         self.setObjectName('terraria_music_packs')
         self.addItem('--')
         self.folders = []
-    
+
     def set_packs(self, paths):
         self.folders.clear()
         for _ in range(self.count() - 1):
             self.removeItem(1)
-        
+
         if paths is not None:
             items = []
             for path in paths:
@@ -105,7 +122,7 @@ class MusicPackSelector(QComboBox):
                     except (FileNotFoundError, json.JSONDecodeError):
                         pass
             self.addItems(items)
-    
+
     def current_folder(self):
         if len(self.folders) > 1 and self.currentIndex() > 0:
             return self.folders[self.currentIndex() - 1]
@@ -154,31 +171,31 @@ class CreateButton(QPushButton):
         if index == 0:
             pack_name = self.parent().parent().findChild(TextField, 'files_pack_name').text()
             if len(pack_name) == 0 or string_contains_characters(pack_name, '\\/:*?"<>|'):
-                Logger.log('Invalid pack name!')
+                log('Invalid pack name!')
             else:
                 target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), pack_name)
                 if os.path.exists(target) and Application.overwrite_pack(self):
                     shutil.rmtree(target)
-                    Logger.log('Removed the existing directory and its contents')
+                    log('Removed the existing directory and its contents')
                 if not os.path.exists(target):
                     source_folder = self.parent().parent().findChild(TextField, 'files_source_path').text()
-                    MusicPack.from_files([os.path.join(source_folder, s.current_file()) for s in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
-                
+                    from_files([os.path.join(source_folder, s.current_file()) for s in self.parent().parent().findChild(AppTab, 'files_tab').findChildren(FileSelector, 'files_selector')], target)
+
 
         elif index == 1:
             playlist = self.parent().parent().findChild(FetchVideosButton, 'youtube_fetch_button').playlist
             pack_name = self.parent().parent().findChild(TextField, 'youtube_pack_name').text()
 
             if len(pack_name) == 0 or string_contains_characters(pack_name, '\\/:*?"<>|'):
-                Logger.log('Invalid pack name!')
+                log('Invalid pack name!')
             else:
                 target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), pack_name)
                 if os.path.exists(target) and Application.overwrite_pack(self):
                     shutil.rmtree(target)
-                    Logger.log('Removed the existing directory and its contents')
+                    log('Removed the existing directory and its contents')
                 if not os.path.exists(target):
-                    MusicPack.from_youtube(playlist, [s.currentIndex() - 1 for s in self.parent().parent().findChild(AppTab, 'youtube_tab').findChildren(VideoSelector, 'video_selector')], target)
-            
+                    from_youtube(playlist, [s.currentIndex() - 1 for s in self.parent().parent().findChild(AppTab, 'youtube_tab').findChildren(VideoSelector, 'video_selector')], target)
+
         elif index == 2:
             selected_pack = self.parent().parent().findChild(MusicPackSelector, 'terraria_music_packs').current_folder()
             if selected_pack is not None:
@@ -188,9 +205,9 @@ class CreateButton(QPushButton):
                 target = os.path.join(self.parent().findChild(TextField, 'target_path').text(), title)
                 if os.path.exists(target) and Application.overwrite_pack(self):
                     shutil.rmtree(target)
-                    Logger.log('Removed the existing directory and its contents')
+                    log('Removed the existing directory and its contents')
                 if not os.path.exists(target):
-                    MusicPack.from_terraria(source, target)
+                    from_terraria(source, target)
 
 
 class LogBox(QTextEdit):
@@ -206,7 +223,7 @@ class LogBox(QTextEdit):
         self.setLineWrapColumnOrWidth(self.parent().parent().width() - 36)
         self.setFrameShape(QFrame.Shape.Box)
         self.textChanged.connect(self.auto_scroll)
-    
+
     def auto_scroll(self):
         self.moveCursor(QTextCursor.MoveOperation.End)
 
@@ -217,11 +234,11 @@ class VideoSelector(QComboBox):
         self.setObjectName('video_selector')
         self.setFixedWidth(360)
         self.addItem('--')
-    
+
     def set_videos(self, titles):
         for _ in range(self.count() - 1):
             self.removeItem(1)
-        
+
         if titles is not None:
             for title in titles:
                 self.addItem(title)
@@ -247,15 +264,15 @@ class FileSelector(QComboBox):
         self.setObjectName('files_selector')
         self.setFixedWidth(360)
         self.addItem('--')
-    
+
     def set_files(self, paths):
         for _ in range(self.count() - 1):
             self.removeItem(1)
-        
+
         if paths is not None:
             for path in paths:
                 self.addItem(os.path.basename(os.path.normpath(path)))
-    
+
     def current_file(self):
         return self.currentText()
 
@@ -350,14 +367,14 @@ class AppTab(QWidget):
 
             grid.addWidget(Label('Source folder:', self), 0, 0)
 
-            source_path = TextField(SYSTEM_PATHS[platform]['terraria'], self)
+            source_path = TextField(SYSTEM_PATHS[sys.platform]['terraria'], self)
             source_path.setObjectName('terraria_source_path')
             grid.addWidget(source_path, 0, 1)
 
             browse_source_button = BrowseButton(self)
             browse_source_button.setObjectName('terraria_browse_button')
             grid.addWidget(browse_source_button, 0, 2)
-            
+
             grid.addWidget(Label('Music pack:', self), 1, 0)
             music_packs = MusicPackSelector(self)
             source_path.text_changed_event()
@@ -365,8 +382,17 @@ class AppTab(QWidget):
 
 
 class Application(QApplication):
+    def __init__(self):
+        super().__init__([])
+
+        global app_instance
+        app_instance = self
+
+        self.create_ui()
+        log('Application window created')
+        self.exec()
+
     def create_ui(self):
-        DEFAULT_TARGET = os.path.join(os.getenv('AppData'), '.minecraft', 'resourcepacks')
         self.setWindowIcon(QIcon('app_icon.ico'))
         # Initialize window
         self.window = QMainWindow()
@@ -396,9 +422,9 @@ class Application(QApplication):
         h_box = QHBoxLayout(row)
         row.setLayout(h_box)
         v_box.addWidget(row)
-            
+
         h_box.addWidget(Label('Target folder:', row))
-        target_path = TextField(SYSTEM_PATHS[platform]['minecraft'], row)
+        target_path = TextField(SYSTEM_PATHS[sys.platform]['minecraft'], row)
         target_path.setObjectName('target_path')
         h_box.addWidget(target_path)
         browse_target_button = BrowseButton(row)
@@ -406,7 +432,7 @@ class Application(QApplication):
         h_box.addWidget(browse_target_button)
         create_button = CreateButton(row)
         h_box.addWidget(create_button)
-        
+
         # Create Log box
         v_box.addWidget(Label('Log output:', row))
         v_box.addWidget(LogBox(column))
@@ -417,40 +443,28 @@ class Application(QApplication):
         # Show window
         self.window.show()
 
-    def __init__(self, logger, musicPack):
-        super().__init__([])
-
-        global app_instance
-        app_instance = self
-
-        global Logger
-        Logger = logger
-        global MusicPack
-        MusicPack = musicPack
-
-        self.create_ui()
-        Logger.log('Application window created')
-        self.exec()
-
-    def overwrite_pack(parent):
-        message_box = QMessageBox(QMessageBox.Icon.Warning, 'Folder already exists', 'Do you want to overwrite the existing folder?', QMessageBox.StandardButton.No, parent)
-        yes_button = message_box.addButton(QMessageBox.StandardButton.Yes)
-        message_box.exec()
-        return message_box.clickedButton() == yes_button
-    
     def log(self, line):
         log_box = self.window.findChild(QTextEdit, 'log_box')
         if log_box is not None:
             log_box.append(line)
         return
-    
-    def instance():
-        global app_instance
-        return app_instance
+
+
+def overwrite_pack(parent):
+    message_box = QMessageBox(QMessageBox.Icon.Warning, 'Folder already exists',
+                              'Do you want to overwrite the existing folder?',
+                              QMessageBox.StandardButton.No, parent)
+    yes_button = message_box.addButton(QMessageBox.StandardButton.Yes)
+    message_box.exec()
+    return message_box.clickedButton() == yes_button
 
 
 def string_contains_characters(string, characters):
-    for c in characters:
-        if c in string:
+    '''
+    Check if a string contains any of the given characters.
+    '''
+    for char in characters:
+        if char in string:
             return True
+    return False
         
